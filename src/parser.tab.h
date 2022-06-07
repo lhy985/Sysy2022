@@ -59,8 +59,8 @@ extern int yydebug;
     RELOP = 260,                   /* RELOP  */
     INT = 261,                     /* INT  */
     FLOAT = 262,                   /* FLOAT  */
-    FloatConst = 263,              /* FloatConst  */
-    VOID = 264,                    /* VOID  */
+    VOID = 263,                    /* VOID  */
+    FloatConst = 264,              /* FloatConst  */
     CONST = 265,                   /* CONST  */
     RETURN = 266,                  /* RETURN  */
     IF = 267,                      /* IF  */
@@ -77,16 +77,19 @@ extern int yydebug;
     RC = 278,                      /* RC  */
     COMMA = 279,                   /* COMMA  */
     SEMI = 280,                    /* SEMI  */
-    ASSIGNOP = 281,                /* ASSIGNOP  */
-    PLUS = 282,                    /* PLUS  */
+    ASSIGN = 281,                  /* ASSIGN  */
+    ADD = 282,                     /* ADD  */
     MINUS = 283,                   /* MINUS  */
-    STAR = 284,                    /* STAR  */
+    MUL = 284,                     /* MUL  */
     DIV = 285,                     /* DIV  */
-    AND = 286,                     /* AND  */
-    OR = 287,                      /* OR  */
-    NOT = 288,                     /* NOT  */
-    LEX_ERR = 289,                 /* LEX_ERR  */
-    UMINUS = 290                   /* UMINUS  */
+    MOD = 286,                     /* MOD  */
+    AND = 287,                     /* AND  */
+    OR = 288,                      /* OR  */
+    NOT = 289,                     /* NOT  */
+    SELF_ADD = 290,                /* SELF_ADD  */
+    SELF_MINUS = 291,              /* SELF_MINUS  */
+    UMINUS = 292,                  /* UMINUS  */
+    LOWER_THEN_ELSE = 293          /* LOWER_THEN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -95,14 +98,14 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 16 "mysysy.y"
+#line 17 "mysysy.y"
 
 	int    type_int;
 	float  type_float;
 	char   type_id[32];
 	struct node *ptr;
 
-#line 106 "parser.tab.h"
+#line 109 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

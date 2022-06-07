@@ -59,20 +59,23 @@ int ((0x|0X)[0-9a-fA-F]+)|(0[0-7]*)|([1-9][0-9]*)
 ","			{return COMMA;}
 ";"			{return SEMI;}
 ">"|"<"|">="|"<="|"=="|"!=" {strcpy(yylval.type_id, yytext);;return RELOP;}
-"="			{return ASSIGNOP;}
-"+"			{return PLUS;}
+"="			{return ASSIGN;}
+"+"			{return ADD;}
 "-"			{return MINUS;}
-"*"			{return STAR;}
+"*"			{return MUL;}
 "/"			{return DIV;}
 "&&"         {return AND;}
 "||"            {return OR;}
+"%"			{return MOD;}
+"++"    {return SELF_ADD;}
+"--"    {return SELF_MINUS;}
 "!"			{return NOT;}
 
 [\n]           {yycolumn=1;}   
 [ \n\r\t]+         {}   
 {MultiLineComment} {}
 {SingleLineComment} {}
-{Invalid} {printf("Lexical error - line %d : %s\n",yylineno,yytext);return LEX_ERR;}
+{Invalid} {printf("Lexical error - line %d : %s\n",yylineno,yytext);}
 .		{printf("Error type A :Mysterious character \"%s\"\n\t at Line %d\n",yytext,yylineno);}
 %%
 

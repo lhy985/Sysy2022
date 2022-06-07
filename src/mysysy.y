@@ -10,7 +10,8 @@ extern char *yytext;
 extern FILE *yyin;
 void yyerror(const char* fmt, ...);
 void display(struct node *,int);
-int yylex ();
+extern int yylex ();
+char filename[30];
 %}
 
 %union {
@@ -21,148 +22,124 @@ int yylex ();
 };
 
 //  %type 定义非终结符的语义值类型
-%type  <ptr> Program CompUnit Decl ConstDecl ConstDefLoop BType ConstDef ConstExpLoop  ConstInitVal ConstInitValLoop VarDecl VarDefLoop VarDef 
-%type  <ptr> InitVal InitValLoop FuncDef  FuncFParams FuncFParam ExpLoop Block BlockItemLoop BlockItem Stmt LVal Exp ConstExp Number Args
+%type  <ptr> Program CompUnit Decl  BType VoidType VarDecl VarDefList VarDef ForArgs ForArg
+%type  <ptr> InitVal InitValList FuncDef  FuncFParams FuncFParam Arrays Block  BlockItem Stmt LVal Exp  Args
 
 //% token 定义终结符的语义值类型
 %token <type_int> IntConst             //指定IntConst的语义值是type_int，由词法分析得到的数值
-%token <type_id> ID RELOP INT FLOAT    //指定ID,RELOP INT FLOAT的语义值是type_id，有词法分析得到的标识符字符串
+%token <type_id> ID RELOP INT FLOAT VOID   //指定ID,RELOP INT FLOAT VOID的语义值是type_id，有词法分析得到的标识符字符串
 %token <type_float> FloatConst         //指定FloatConst的语义值是type_int，由词法分析得到的数值
 
-%token VOID CONST RETURN IF ELSE FOR WHILE BREAK  CONTINUE
+%token CONST RETURN IF ELSE FOR WHILE BREAK  CONTINUE
 %token LP RP LB RB LC RC  COMMA  SEMI //用bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码
-%token  ASSIGNOP PLUS MINUS STAR DIV AND OR NOT  LEX_ERR
+%token  ASSIGN ADD MINUS MUL DIV MOD AND OR NOT  SELF_ADD SELF_MINUS
 
-%left ASSIGNOP
+%left ASSIGN
 %left OR
 %left AND
 %left RELOP
-%left PLUS MINUS
-%left STAR DIV
+%left ADD MINUS MOD
+%left MUL DIV
 %right UMINUS NOT
+%left SEMI
+%nonassoc LOWER_THEN_ELSE
 %nonassoc ELSE
 
 %%
-Program:      CompUnit {};
-CompUnit:     Decl {}
-            | FuncDef {}
-            | CompUnit Decl {}
-            | CompUnit FuncDef {}
+Program:      CompUnit {printf("CompUnit:\n"); display($1,3);};
+CompUnit:     Decl {$$=$1;}
+            | FuncDef {$$=$1;}
+            | CompUnit Decl {$$=mknode(COMP_UNIT,$1,$2,NULL,yylineno);}
+            | CompUnit FuncDef {$$=mknode(COMP_UNIT,$1,$2,NULL,yylineno);}
+            | error SEMI  {$$=NULL; }
             ;
-Decl:         ConstDecl {}
-            | VarDecl {}
+Decl:         CONST VarDecl {$$=$2; $$->type = CONST;}
+            | VarDecl {$$=$1;}
             ;
-ConstDecl:    CONST BType ConstDef ConstDefLoop SEMI {}
+BType:        INT {$$=mknode(INT_TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type= INT;}
+            | FLOAT {$$=mknode(FLOAT_TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type= FLOAT;}
             ;
-ConstDefLoop: {$$ = NULL;}
-            | COMMA ConstDef ConstDefLoop {}
+VoidType:   VOID {$$=mknode(VOID_TYPE,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);$$->type=VOID;}
             ;
-BType:        INT {}
-            | FLOAT {}
+VarDecl:      BType VarDef VarDefList SEMI {$$=mknode(VAR_DECL,$1,$2,$3,yylineno); }
             ;
-ConstDef:     ID ConstExpLoop ASSIGNOP ConstInitVal {}
+VarDefList: {$$=NULL;}
+            | COMMA VarDef VarDefList {$$=mknode(VAR_DEF_LIST,$2,$3,NULL,yylineno);}
             ;
-ConstExpLoop:{$$ = NULL;}
-            | LB ConstExp RB ConstDefLoop { }
-            ;
-ConstInitVal: ConstExp {}
-            | LC RC {}
-            | LC ConstInitVal ConstInitValLoop RC {}
-            ;
-ConstInitValLoop: {$$ = NULL;}
-            | COMMA ConstInitVal ConstInitValLoop {}
-            ;
-VarDecl: BType VarDef VarDefLoop SEMI {}
-            ;
-VarDefLoop: {}
-            | COMMA VarDef VarDefLoop {}
-            ;
-VarDef:       ID ConstExpLoop {}
-            | ID ConstExpLoop ASSIGNOP InitVal {}
+VarDef:       ID Arrays {$$=mknode(VAR_DEF,$2,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+            | ID Arrays ASSIGN InitVal {$$=mknode(VAR_DEF,$2,$4,NULL,yylineno);strcpy($$->type_id,$1);}
             ;
 
-InitVal:      Exp {}
-            | LC RC {}
-            | LC InitVal InitValLoop RC {}
+InitVal:      Exp {$$=mknode(INIT_VAL,$1,NULL,NULL,yylineno);}
+            | LC RC {$$=NULL;}
+            | LC InitVal InitValList RC {$$=mknode(INIT_VAL_LIST,$2,$3,NULL,yylineno);}
             ;
-InitValLoop: {}
-            |COMMA InitVal InitValLoop {}
+InitValList: {$$=NULL;}
+            |COMMA InitVal InitValList {$$=mknode(INIT_VAL_LIST,$2,$3,NULL,yylineno);}
             ;
-FuncDef:     BType ID LP RP Block {}
-            |VOID  ID LP RP Block {}
-            |BType ID LP FuncFParams RP Block {}
-            |VOID ID LP FuncFParams RP Block {}
+FuncDef:     BType ID LP RP Block {$$=mknode(FUNC_DEF,$1,NULL,$5,yylineno);strcpy($$->type_id,$2);}
+            |VoidType  ID LP RP Block {$$=mknode(FUNC_DEF,$1,NULL,$5,yylineno);strcpy($$->type_id,$2);}
+            |BType ID LP FuncFParams RP Block {$$=mknode(FUNC_DEF,$1,$4,$6,yylineno);strcpy($$->type_id,$2);}
+            |VoidType ID LP FuncFParams RP Block {$$=mknode(FUNC_DEF,$1,$4,$6,yylineno);strcpy($$->type_id,$2);}
             ;
-
-
-
-FuncFParams:  FuncFParam {}
-            | FuncFParam COMMA FuncFParams {}
+FuncFParams:  FuncFParam {$$=mknode(PARAM_LIST,$1,NULL,NULL,yylineno);}
+            | FuncFParam COMMA FuncFParams {$$=mknode(PARAM_LIST,$1,$3,NULL,yylineno);}
             ;
 
-FuncFParam:   BType ID {}
-            | BType ID LB RB ExpLoop {}
+FuncFParam:   BType VarDef {$$=mknode(FUNC_PARAM,$1,$2,NULL,yylineno);}
             ;
-ExpLoop:    {}
-            |LB Exp RB ExpLoop {}
+Arrays:       {$$=NULL;}
+            |LB Exp RB Arrays {$$=mknode(ARRAYS,$2,$4,NULL,yylineno);}
             ;
 
-Block:      LC BlockItemLoop RC {}
+Block:      LC BlockItem RC {$$=mknode(BLOCK,$2,NULL,NULL,yylineno);}
             ;
-BlockItemLoop: {}
-            | BlockItem BlockItemLoop {}
+BlockItem:    {$$=NULL; }
+            | Stmt BlockItem{$$=mknode(BLOCK_ITEM_LIST,$1,$2,NULL,yylineno);}
+            | Decl BlockItem {$$=mknode(BLOCK_ITEM_LIST,$1,$2,NULL,yylineno);}
             ;
-BlockItem:    Decl {}
-            | Stmt {}
+Stmt:        Exp SEMI {$$=mknode(EXP_STMT,$1,NULL,NULL,yylineno);}
+            | Block {$$=$1;}
+            | SEMI {$$=NULL;}
+            | IF LP Exp RP Stmt %prec LOWER_THEN_ELSE {$$=mknode(IF_THEN,$3,$5,NULL,yylineno);}
+            | IF LP Exp RP Stmt ELSE Stmt {$$=mknode(IF_THEN_ELSE,$3,$5,$7,yylineno);}
+            | WHILE LP Exp RP Stmt {$$=mknode(WHILE_STMT,$3,$5,NULL,yylineno);}
+            | BREAK SEMI {$$=mknode(BREAK_STMT,NULL,NULL,NULL,yylineno);}
+            | CONTINUE SEMI {$$=mknode(CONTINUE_STMT,NULL,NULL,NULL,yylineno);}
+            | RETURN SEMI {$$=mknode(RETURN_STMT,NULL,NULL,NULL,yylineno);}
+            | RETURN Exp SEMI {$$=mknode(RETURN_STMT,$2,NULL,NULL,yylineno);}
+            | FOR ForArgs Stmt {$$=mknode(FOR_STMT,$2,$3,NULL,yylineno);}
             ;
-Stmt:         LVal ASSIGNOP Exp SEMI {}
-            | Block {}
-            | SEMI {}
-            | Exp SEMI {}
-            | IF LP Exp RP Stmt {}
-            | IF LP Exp RP Stmt ELSE Stmt {}
-            | WHILE LP Exp RP Stmt {}
-            | BREAK SEMI {}
-            | CONTINUE SEMI {}
-            | RETURN SEMI {}
-            | RETURN Exp SEMI {}
-            | FOR LP  VarDef SEMI Exp SEMI Exp  RP Stmt {}
+ForArgs:     LP ForArg SEMI ForArg SEMI ForArg RP  {$$=mknode(FOR_ARGS,$2,$4,$6,yylineno);}
             ;
-LVal:        ID ExpLoop {}
+ForArg:       {$$=NULL;}  
+            | Exp  {$$=$1;}
             ;
-Exp:   Exp ASSIGNOP Exp  {}
-      | Exp AND Exp {}
-      | Exp OR Exp  {}   
-      | Exp RELOP Exp  {}
-      | Exp PLUS Exp  {} 
-      | Exp MINUS Exp  {}
-      | Exp STAR Exp   {}
-      | Exp DIV Exp   {} 
-      | LP Exp RP      {}
-      | MINUS Exp %prec UMINUS    {}
-      | NOT Exp       {}
-      | ID LP Args RP  {}
-      | ID LP RP       {}
-      | ID             {}
-      | Number         {}
-      ;
-/* ConstExp: ConstExp PLUS ConstExp  {}
-        | ConstExp MINUS ConstExp {}
-        | ConstExp STAR ConstExp {}
-        | ConstExp DIV ConstExp {}
-        | LP ConstExp RP {}
-        | MINUS ConstExp %prec UMINUS {}
-        | Number {}
-        ; */
-Number:   IntConst {}
-        | FloatConst {}
-        ;
-Args:    Exp COMMA Args    {}
-       | Exp               {}
-       ;
-
-
-
+LVal:        ID Arrays {$$=mknode(LVAL,$2,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+               ;
+Exp:         LVal ASSIGN Exp  {$$=mknode(ASSIGN_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGN");}
+            | Exp AND Exp {$$=mknode(AND_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"AND");}
+            | Exp OR Exp  {$$=mknode(OR_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"OR");}   
+            | Exp RELOP Exp  {$$=mknode(RELOP_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,$2);}
+            | Exp ADD Exp  {$$=mknode(ADD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ADD");} 
+            | Exp MINUS Exp  {$$=mknode(MINUS_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MINUS");}
+            | Exp MUL Exp   {$$=mknode(MUL_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MUL");}
+            | Exp DIV Exp   {$$=mknode(DIV_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"DIV");}
+            | Exp MOD Exp     {$$=mknode(MOD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MOD");}
+            | LVal SELF_ADD  {$$=mknode(SELF_ADD_EXP,$1,NULL,NULL,yylineno);}
+            | LVal SELF_MINUS {$$=mknode(SELF_MINUS_EXP,$1,NULL,NULL,yylineno);}
+            | LP Exp RP      {$$=$2;}
+            | MINUS Exp %prec UMINUS    {$$=mknode(UMINUS_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"UMINUS");}
+            | NOT Exp       {$$=mknode(NOT_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"NOT");}
+            | ID LP Args RP  {$$=mknode(FUNC_CALL,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+            | ID LP RP       {$$=mknode(FUNC_CALL,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
+            | LVal             {$$=$1;}
+            | IntConst {$$=mknode(INT_CONST,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=IntConst;}
+            | FloatConst {$$=mknode(FLOAT_CONST,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FloatConst;}
+            ;
+Args:         Exp COMMA Args    {$$=mknode(ARGS,$1,$3,NULL,yylineno);}
+            | Exp               {$$=mknode(ARGS,$1,NULL,NULL,yylineno);}
+            ;
 
 
 %%
@@ -170,6 +147,11 @@ Args:    Exp COMMA Args    {}
 int main(int argc, char *argv[]){
 	yyin=fopen(argv[1],"r");
 	if (!yyin) return -1;
+	/* char A[30] = "cat ";
+	strcpy(A+4, argv[1]); */
+	/* system(A); //打印文件内容*/
+	strcpy(filename,strrchr(argv[1],'/')+1);
+    /* C 库函数 char *strrchr(const char *str, int c) 在参数 str 所指向的字符串中搜索最后一次出现字符 c（一个无符号字符）的位置 */
 	yylineno=1;
 	yyparse();
 	return 0;
@@ -180,7 +162,8 @@ void yyerror(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    fprintf(stderr, "Grammar Error at Line %d Column %d: ", yylloc.first_line,yylloc.first_column);
+	fprintf(stderr, "%s:%d ",filename, yylloc.first_line);
+    // fprintf(stderr, "Grammar Error at Line %d Column %d: ", yylloc.first_line,yylloc.first_column);
     vfprintf(stderr, fmt, ap);
     fprintf(stderr, ".\n");
 }	

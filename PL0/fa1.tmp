@@ -1,0 +1,12 @@
+Input pl/0 file?   
+0   var  
+
+1      a;  
+
+1   begin  
+
+2      read(a);  
+
+4      write(a * a)  
+
+8   end.  

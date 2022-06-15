@@ -1,0 +1,6 @@
+  var  
+     a;  
+  begin  
+     read(a);  
+     write(a * a)  
+  end.  

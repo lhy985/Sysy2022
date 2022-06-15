@@ -5,6 +5,7 @@
 #include "math.h"
 #include "string.h"
 #include "def.h"
+#include "symtable.h"
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
@@ -46,7 +47,7 @@ char filename[30];
 %nonassoc ELSE
 
 %%
-Program:      CompUnit {printf("CompUnit:\n"); display($1,3);};
+ Program:      CompUnit {creatSymTb($1,initTable(),0);/*printf("CompUnit:\n"); display($1,3);*/};
 CompUnit:     Decl {$$=$1;}
             | FuncDef {$$=$1;}
             | CompUnit Decl {$$=mknode(COMP_UNIT,$1,$2,NULL,yylineno);}

@@ -1,10 +1,12 @@
 #ifndef DEF_H
 #define DEF_H
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <string>
 #include "stdarg.h"
 #include "parser.tab.h"
+using namespace std;
 
 enum node_kind  {COMP_UNIT,FUNC_DEF,VAR_DEF_LIST,INIT_VAL_LIST,VAR_DECL,INT_TYPE,FLOAT_TYPE,VOID_TYPE,VAR_DEF,INIT_VAL,PARAM_LIST
                 ,FUNC_PARAM,ARRAYS,BLOCK,BLOCK_ITEM_LIST,EXP_STMT,IF_THEN,IF_THEN_ELSE,WHILE_STMT,BREAK_STMT,CONTINUE_STMT
@@ -55,7 +57,7 @@ struct node {    //以下对结点属性定义没有考虑存储效率，只是�
 typedef struct symbol {  //这里只列出了一个符号表项的部分属性，没考虑属性间的互斥
     char name[33];     //变量或函数名
     int level;   //层号，外部变量名或函数名层号为0，形参名为1，每到1个复合语句层号加1，退出减1
-    string  type;           //变量类型或函数类型
+    string type;           //变量类型或函数类型
     int  paramnum;    //形式参数个数
     char alias[10];      //别名，为解决嵌套层次使用，使得每一个数据名称唯一
     char flag;          //符号标记，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
@@ -75,7 +77,7 @@ typedef struct symbol_scope_begin {  /*当前作用域的符号在符号表的�
     } symbol_scope_TX;
 
 
-struct node *mknode(int kind,struct node *first,struct node *second, struct node *third,int pos );
+struct node *mknode(enum node_kind kind,struct node *first,struct node *second, struct node *third,int pos );
 
 // 为语义分析和代码生成预留 
 void semantic_Analysis0(struct node *T);

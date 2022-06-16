@@ -1,6 +1,6 @@
- #include "def.h"
- void display_funparam(struct node *T);
-struct node * mknode(int kind,struct node *first,struct node *second, struct node *third,int pos ) {
+#include "def.h"
+void display_funparam(struct node *T);
+struct node * mknode(enum node_kind kind,struct node *first,struct node *second, struct node *third,int pos ) {
   struct node *T=(struct node *)malloc(sizeof(struct node));
   T->kind=kind;
   T->ptr[0]=first;

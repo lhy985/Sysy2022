@@ -63,6 +63,7 @@ typedef struct symbol {  //这里只列出了一个符号表项的部分属性�
     char flag;          //符号标记，函数：'F'  变量：'V'   参数：'P'  临时变量：'T'
     char offset;        //外部变量和局部变量在其静态数据区或活动记录中的偏移量
 				   //或函数活动记录大小，目标代码生成时使用
+    int dimen; //记录变量的维数
     //其它...
     } symbol;
 //符号表，是一个顺序栈，index初值为0
@@ -78,11 +79,4 @@ typedef struct symbol_scope_begin {  /*当前作用域的符号在符号表的�
 
 
 struct node *mknode(enum node_kind kind,struct node *first,struct node *second, struct node *third,int pos );
-
-// 为语义分析和代码生成预留 
-void semantic_Analysis0(struct node *T);
-void semantic_Analysis(struct node *T);
-void boolExp(struct node *T);
-void Exp(struct node *T);
-void objectCode(struct codenode *head);
 #endif

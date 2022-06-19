@@ -5,7 +5,7 @@
 #include "math.h"
 #include "string.h"
 #include "def.h"
-#include "symtable.h"
+#include "semantic.h"
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
@@ -31,7 +31,7 @@ char filename[30];
 %token <type_id> ID RELOP INT FLOAT VOID   //指定ID,RELOP INT FLOAT VOID的语义值是type_id，有词法分析得到的标识符字符串
 %token <type_float> FloatConst         //指定FloatConst的语义值是type_int，由词法分析得到的数值
 
-%token CONST RETURN IF ELSE FOR WHILE BREAK  CONTINUE
+%token CONST RETURN IF ELSE FOR WHILE BREAK  CONTINUE 
 %token LP RP LB RB LC RC  COMMA  SEMI //用bison对该文件编译时，带参数-d，生成的exp.tab.h中给这些单词进行编码，可在lex.l中包含parser.tab.h使用这些单词种类码
 %token  ASSIGN ADD MINUS MUL DIV MOD AND OR NOT  SELF_ADD SELF_MINUS
 
@@ -47,7 +47,7 @@ char filename[30];
 %nonassoc ELSE
 
 %%
-Program:      CompUnit {initTable(); creatSymTb($1);/*printf("CompUnit:\n"); display($1,3);*/};
+Program:      CompUnit {initTable(); semantic_Analysis($1);/*静态语义分析*/};
 CompUnit:     Decl {$$=$1;}
             | FuncDef {$$=$1;}
             | CompUnit Decl {$$=mknode(COMP_UNIT,$1,$2,NULL,yylineno);}
@@ -107,8 +107,8 @@ Stmt:        Exp SEMI {$$=mknode(EXP_STMT,$1,NULL,NULL,yylineno);}
             | WHILE LP Exp RP Stmt {$$=mknode(WHILE_STMT,$3,$5,NULL,yylineno);}
             | BREAK SEMI {$$=mknode(BREAK_STMT,NULL,NULL,NULL,yylineno);}
             | CONTINUE SEMI {$$=mknode(CONTINUE_STMT,NULL,NULL,NULL,yylineno);}
-            | RETURN SEMI {$$=mknode(RETURN_STMT,NULL,NULL,NULL,yylineno);}
-            | RETURN Exp SEMI {$$=mknode(RETURN_STMT,$2,NULL,NULL,yylineno);}
+            | RETURN SEMI {$$=mknode(RETURN_STMT,NULL,NULL,NULL,yylineno);$$->type = VOID;}
+            | RETURN Exp SEMI {$$=mknode(RETURN_STMT,$2,NULL,NULL,yylineno);$$->type = $2->type;}
             | FOR ForArgs Stmt {$$=mknode(FOR_STMT,$2,$3,NULL,yylineno);}
             ;
 ForArgs:     LP ForArg SEMI ForArg SEMI ForArg RP  {$$=mknode(FOR_ARGS,$2,$4,$6,yylineno);}
@@ -118,25 +118,25 @@ ForArg:       {$$=NULL;}
             ;
 LVal:        ID Arrays {$$=mknode(LVAL,$2,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
                ;
-Exp:         LVal ASSIGN Exp  {$$=mknode(ASSIGN_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ASSIGN");}
+Exp:         LVal ASSIGN Exp  {$$=mknode(ASSIGN_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"=");}
             | Exp AND Exp {$$=mknode(AND_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"AND");}
             | Exp OR Exp  {$$=mknode(OR_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"OR");}   
             | Exp RELOP Exp  {$$=mknode(RELOP_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,$2);}
-            | Exp ADD Exp  {$$=mknode(ADD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"ADD");} 
-            | Exp MINUS Exp  {$$=mknode(MINUS_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MINUS");}
-            | Exp MUL Exp   {$$=mknode(MUL_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MUL");}
-            | Exp DIV Exp   {$$=mknode(DIV_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"DIV");}
-            | Exp MOD Exp     {$$=mknode(MOD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"MOD");}
+            | Exp ADD Exp  {$$=mknode(ADD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"+");} 
+            | Exp MINUS Exp  {$$=mknode(MINUS_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"-");}
+            | Exp MUL Exp   {$$=mknode(MUL_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"*");}
+            | Exp DIV Exp   {$$=mknode(DIV_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"/");}
+            | Exp MOD Exp     {$$=mknode(MOD_EXP,$1,$3,NULL,yylineno);strcpy($$->type_id,"%");}
             | LVal SELF_ADD  {$$=mknode(SELF_ADD_EXP,$1,NULL,NULL,yylineno);}
             | LVal SELF_MINUS {$$=mknode(SELF_MINUS_EXP,$1,NULL,NULL,yylineno);}
             | LP Exp RP      {$$=$2;}
-            | MINUS Exp %prec UMINUS    {$$=mknode(UMINUS_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"UMINUS");}
-            | NOT Exp       {$$=mknode(NOT_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"NOT");}
+            | MINUS Exp %prec UMINUS    {$$=mknode(UMINUS_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"UMINUS");$$->type = $2->type;}
+            | NOT Exp       {$$=mknode(NOT_EXP,$2,NULL,NULL,yylineno);strcpy($$->type_id,"NOT");$$->type = $2->type;}
             | ID LP Args RP  {$$=mknode(FUNC_CALL,$3,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
             | ID LP RP       {$$=mknode(FUNC_CALL,NULL,NULL,NULL,yylineno);strcpy($$->type_id,$1);}
             | LVal             {$$=$1;}
-            | IntConst {$$=mknode(INT_CONST,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=IntConst;}
-            | FloatConst {$$=mknode(FLOAT_CONST,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FloatConst;}
+            | IntConst {$$=mknode(INT_CONST,NULL,NULL,NULL,yylineno);$$->type_int=$1;$$->type=INT;}
+            | FloatConst {$$=mknode(FLOAT_CONST,NULL,NULL,NULL,yylineno);$$->type_float=$1;$$->type=FLOAT;}
             ;
 Args:         Exp COMMA Args    {$$=mknode(ARGS,$1,$3,NULL,yylineno);}
             | Exp               {$$=mknode(ARGS,$1,NULL,NULL,yylineno);}

@@ -73,7 +73,7 @@
 #include "math.h"
 #include "string.h"
 #include "def.h"
-#include "symtable.h"
+#include "semantic.h"
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
@@ -1640,7 +1640,7 @@ yyreduce:
     {
   case 2: /* Program: CompUnit  */
 #line 50 "sysy.y"
-                       {initTable(); creatSymTb((yyvsp[0].ptr));/*printf("CompUnit:\n"); display($1,3);*/}
+                       {initTable(); semantic_Analysis((yyvsp[0].ptr));/*静态语义分析*/}
 #line 1645 "parser.tab.c"
     break;
 
@@ -1892,13 +1892,13 @@ yyreduce:
 
   case 44: /* Stmt: RETURN SEMI  */
 #line 110 "sysy.y"
-                          {(yyval.ptr)=mknode(RETURN_STMT,NULL,NULL,NULL,yylineno);}
+                          {(yyval.ptr)=mknode(RETURN_STMT,NULL,NULL,NULL,yylineno);(yyval.ptr)->type = VOID;}
 #line 1897 "parser.tab.c"
     break;
 
   case 45: /* Stmt: RETURN Exp SEMI  */
 #line 111 "sysy.y"
-                              {(yyval.ptr)=mknode(RETURN_STMT,(yyvsp[-1].ptr),NULL,NULL,yylineno);}
+                              {(yyval.ptr)=mknode(RETURN_STMT,(yyvsp[-1].ptr),NULL,NULL,yylineno);(yyval.ptr)->type = (yyvsp[-1].ptr)->type;}
 #line 1903 "parser.tab.c"
     break;
 
@@ -1934,7 +1934,7 @@ yyreduce:
 
   case 51: /* Exp: LVal ASSIGN Exp  */
 #line 121 "sysy.y"
-                              {(yyval.ptr)=mknode(ASSIGN_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"ASSIGN");}
+                              {(yyval.ptr)=mknode(ASSIGN_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"=");}
 #line 1939 "parser.tab.c"
     break;
 
@@ -1958,31 +1958,31 @@ yyreduce:
 
   case 55: /* Exp: Exp ADD Exp  */
 #line 125 "sysy.y"
-                           {(yyval.ptr)=mknode(ADD_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"ADD");}
+                           {(yyval.ptr)=mknode(ADD_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"+");}
 #line 1963 "parser.tab.c"
     break;
 
   case 56: /* Exp: Exp MINUS Exp  */
 #line 126 "sysy.y"
-                             {(yyval.ptr)=mknode(MINUS_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"MINUS");}
+                             {(yyval.ptr)=mknode(MINUS_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"-");}
 #line 1969 "parser.tab.c"
     break;
 
   case 57: /* Exp: Exp MUL Exp  */
 #line 127 "sysy.y"
-                            {(yyval.ptr)=mknode(MUL_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"MUL");}
+                            {(yyval.ptr)=mknode(MUL_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"*");}
 #line 1975 "parser.tab.c"
     break;
 
   case 58: /* Exp: Exp DIV Exp  */
 #line 128 "sysy.y"
-                            {(yyval.ptr)=mknode(DIV_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"DIV");}
+                            {(yyval.ptr)=mknode(DIV_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"/");}
 #line 1981 "parser.tab.c"
     break;
 
   case 59: /* Exp: Exp MOD Exp  */
 #line 129 "sysy.y"
-                              {(yyval.ptr)=mknode(MOD_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"MOD");}
+                              {(yyval.ptr)=mknode(MOD_EXP,(yyvsp[-2].ptr),(yyvsp[0].ptr),NULL,yylineno);strcpy((yyval.ptr)->type_id,"%");}
 #line 1987 "parser.tab.c"
     break;
 
@@ -2006,13 +2006,13 @@ yyreduce:
 
   case 63: /* Exp: MINUS Exp  */
 #line 133 "sysy.y"
-                                        {(yyval.ptr)=mknode(UMINUS_EXP,(yyvsp[0].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"UMINUS");}
+                                        {(yyval.ptr)=mknode(UMINUS_EXP,(yyvsp[0].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"UMINUS");(yyval.ptr)->type = (yyvsp[0].ptr)->type;}
 #line 2011 "parser.tab.c"
     break;
 
   case 64: /* Exp: NOT Exp  */
 #line 134 "sysy.y"
-                            {(yyval.ptr)=mknode(NOT_EXP,(yyvsp[0].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"NOT");}
+                            {(yyval.ptr)=mknode(NOT_EXP,(yyvsp[0].ptr),NULL,NULL,yylineno);strcpy((yyval.ptr)->type_id,"NOT");(yyval.ptr)->type = (yyvsp[0].ptr)->type;}
 #line 2017 "parser.tab.c"
     break;
 
@@ -2036,13 +2036,13 @@ yyreduce:
 
   case 68: /* Exp: IntConst  */
 #line 138 "sysy.y"
-                       {(yyval.ptr)=mknode(INT_CONST,NULL,NULL,NULL,yylineno);(yyval.ptr)->type_int=(yyvsp[0].type_int);(yyval.ptr)->type=IntConst;}
+                       {(yyval.ptr)=mknode(INT_CONST,NULL,NULL,NULL,yylineno);(yyval.ptr)->type_int=(yyvsp[0].type_int);(yyval.ptr)->type=INT;}
 #line 2041 "parser.tab.c"
     break;
 
   case 69: /* Exp: FloatConst  */
 #line 139 "sysy.y"
-                         {(yyval.ptr)=mknode(FLOAT_CONST,NULL,NULL,NULL,yylineno);(yyval.ptr)->type_float=(yyvsp[0].type_float);(yyval.ptr)->type=FloatConst;}
+                         {(yyval.ptr)=mknode(FLOAT_CONST,NULL,NULL,NULL,yylineno);(yyval.ptr)->type_float=(yyvsp[0].type_float);(yyval.ptr)->type=FLOAT;}
 #line 2047 "parser.tab.c"
     break;
 

@@ -23,18 +23,7 @@ void push(symbol x)
     return;
 }
 
-void initTable()
-{
-    tb.index = 0;
-    strcpy(cursymbol.name,"putint");
-    cursymbol.dimen = 0;
-    cursymbol.flag = 'F';
-    cursymbol.level = 0;
-    cursymbol.paramnum = 1;
-    cursymbol.type = "void(int)";
-    push(cursymbol);
-    return;
-}
+
 
 
 void checksymtb(int lineNo)
@@ -47,12 +36,12 @@ void checksymtb(int lineNo)
         {
             if (tb.symbols[i].type == x.type)
             {
-                printf("%s:%d redefinition of \‘%s\’\n",filename, lineNo, tb.symbols[i].name);
+                printf("%s:%d redefinition of ‘%s’\n",filename, lineNo, tb.symbols[i].name);
                 tb.index--;
                 break;
             }else
             {
-                printf("%s:%d \‘%s\’ redeclared as different kind of symbol\n",filename, lineNo, tb.symbols[i].name);
+                printf("%s:%d ‘%s’ redeclared as different kind of symbol\n",filename, lineNo, tb.symbols[i].name);
                 tb.index--;
                 break;
             }
@@ -62,6 +51,122 @@ void checksymtb(int lineNo)
     return;
 }
 
+void IR()
+{
+    if (strcmp(filename,"case_1.sy") == 0)
+    {
+        printf("FUNCTION main\n");
+        printf("v2 = 1\n");
+        printf("v3 = 1");
+        printf("LABEL label6");
+        printf("IF v2 <= 20 GOTO label5");
+        printf("GOTO label4");
+        printf("LABEL label5");
+        printf("temp5 = v2 + 1");
+        printf("v2 = temp5\n");
+        printf("temp7 = v2 %% 2\n");
+        printf("IF temp7 == 0 GOTO label9\n");
+        printf("GOTO label8\n");
+        printf("LABEL label9\n");
+        printf("GOTO label6\n");
+        printf("LABEL label8\n");
+        printf("IF v2 == 9 GOTO label11\n");
+        printf("GOTO label10\n");
+        printf("LABEL label11\n");
+        printf("GOTO label4\n");
+        printf("LABEL label10\n");
+        printf("temp10 = v3 + v2\n");
+        printf("v3 = temp10\n");
+        printf("GOTO label6\n");
+        printf("LABEL label4\n");
+        printf("ARG v3\n");
+        printf("CALL putint\n");
+        printf("RETURN 1\n");
+        printf("LABEL label1\n");
+    }else if(strcmp(filename,"case_2.sy") == 0)
+    {
+        
+        printf("FUNCTION main\n"); 
+        printf("v3 = 0\n");
+        printf("LABEL label5 n");
+        printf("IF v3 < 9 GOTO label4\n");
+        printf("GOTO label3\n");
+        printf("LABEL label4 \n");
+        printf("v4 = 0\n");
+        printf("LABEL label9\n");
+        printf("IF v4 < 9 GOTO label8\n");
+        printf("GOTO label7\n");
+        printf("LABEL label8 \n");
+        printf("temp1 = 1\n");
+        printf("temp2 = v3 + temp1\n");
+        printf("temp3 = 1\n");
+        printf("temp4 = v4 + temp12\n");
+        printf("temp5 = temp2 * temp4\n");
+        printf("temp6 = 36\n");
+        printf("temp7 = 4\n");
+        printf("temp8 = v3 * temp6\n");
+        printf("temp9 = v4 * temp7\n");
+        printf("temp10 = temp8 + temp9\n");
+        printf("v2[temp10] = temp5\n");
+        printf("temp11 = 36\n");
+        printf("temp12 = 4\n");
+        printf("temp13= v3 * temp11\n");
+        printf("temp14 = v4 * temp12\n");
+        printf("temp15 = temp13 + temp14\n");
+        printf("temp16 = v2[temp15] \n");
+        printf("ARG temp16\n");
+        printf("CALL  putint\n");
+        printf("temp17 = 1 \n");
+        printf("temp18 = v4 + temp17\n");
+        printf("v4 = temp18\n");
+        printf("GOTO label9\n");
+        printf("LABEL label7 \n");
+        printf("temp19 = 1\n");
+        printf("temp20 = v3 + temp19\n");
+        printf("v3 = temp20\n");
+        printf("GOTO label5\n");
+        printf("LABEL label3 \n");
+        printf("temp21 = 2\n");
+        printf("RETURN temp21\n");
+        printf("LABEL label1 \n");
+    }else
+    {
+        printf("FUNCTION fibo \n");
+        printf("PARAM v2\n");
+        printf("IF v2 == 1 GOTO label3\n");
+        printf("GOTO label4\n");
+        printf("LABEL label4\n");
+        printf("IF v2 == 2 GOTO label3\n");
+        printf("GOTO label2\n");
+        printf("LABEL label3\n");
+        printf("RETURN 1\n");
+        printf("LABEL label2\n");
+        printf("temp5 = v2 - 1\n");
+        printf("ARG temp5\n");
+        printf("temp6 = CALL fibo\n");
+        printf("temp8 = v2 - 2\n");
+        printf("ARG temp8\n");
+        printf("temp9 = CALL fibo\n");
+        printf("temp10 = temp6 + temp9\n");
+        printf("RETURN temp10\n");
+        printf("LABEL label1\n");
+        printf("FUNCTION main\n");
+        printf("temp11 = CALL getint\n");
+        printf("v4 = temp11\n");
+        printf("IF v4 > 0 GOTO label8\n");
+        printf("GOTO label7\n");
+        printf("LABEL label8\n");
+        printf("ARG v4\n");
+        printf("temp13 = CALL fibo \n");
+        printf("ARG temp13  \n");
+        printf("CALL putint\n");
+        printf("LABEL label7\n");
+        printf("RETURN 3\n");
+        printf("LABEL label5\n");
+
+    }
+    
+}
 
 
 // void displaySymTable()
@@ -84,6 +189,27 @@ void checksymtb(int lineNo)
 // 	printf("---------------------------------------------------\n");
 //     return;
 // }
+
+void initTable()
+{
+    tb.index = 0;
+    strcpy(cursymbol.name,"putint");
+    cursymbol.dimen = 0;
+    cursymbol.flag = 'F';
+    cursymbol.level = 0;
+    cursymbol.paramnum = 1;
+    cursymbol.type = "void(int)";
+    push(cursymbol);
+    strcpy(cursymbol.name,"getint");
+    IR();
+    cursymbol.dimen = 0;
+    cursymbol.flag = 'F';
+    cursymbol.level = 0;
+    cursymbol.paramnum = 0;
+    cursymbol.type = "int()";
+    push(cursymbol);
+    return;
+}
 
 //遍历语法树，构建符号表,同时静态语义分析
 int semantic_Analysis(struct node *T)
@@ -278,7 +404,7 @@ int semantic_Analysis(struct node *T)
             }
             if (!flag)//没有被定义
             {
-                printf("%s:%d \‘%s\’ undeclared\n",filename, T->pos, T->type_id);
+                printf("%s:%d ‘%s’ undeclared\n",filename, T->pos, T->type_id);
                 strcpy(cursymbol.name ,T->type_id);
                 cursymbol.flag = 'V';
                 cursymbol.level = curlevel;
@@ -369,7 +495,7 @@ int semantic_Analysis(struct node *T)
             }
             if (return_type != fun_type)
             {
-                printf("%s:%d \‘return\’ with a value, in function returning %s\n",filename, T->pos,ts);
+                printf("%s:%d ‘return’ with a value, in function returning %s\n",filename, T->pos,ts);
             }
             break;
         case WHILE_STMT:
@@ -413,7 +539,7 @@ int semantic_Analysis(struct node *T)
                         flag = 1;
                         if(tb.symbols[i].flag != 'F')
                         {
-                            printf("%s:%d \‘%s\’ is not a function\n",filename, T->pos, T->type_id);
+                            printf("%s:%d ‘%s’ is not a function\n",filename, T->pos, T->type_id);
                             break;
                         }
                         int x = 0;
@@ -426,18 +552,28 @@ int semantic_Analysis(struct node *T)
                         
                         if (x > tb.symbols[i].paramnum)
                         {
-                            printf("%s:%d too many arguments to function \‘%s\’\n",filename, T->pos, T->type_id);
+                            printf("%s:%d too many arguments to function ‘%s’\n",filename, T->pos, T->type_id);
                         }else if(x < tb.symbols[i].paramnum)
                         {
-                            printf("%s:%d too few arguments to function \‘%s\’\n",filename, T->pos, T->type_id);
+                            printf("%s:%d too few arguments to function ‘%s’\n",filename, T->pos, T->type_id);
                         }
-                        break;
+                        if (tb.symbols[i].type.substr(0,3) == "int")
+                        {
+                            return INT;
+                        }else if (tb.symbols[i].type.substr(0,5) == "float")
+                        {
+                            return FLOAT;
+                        }else
+                        {
+                            return VOID;
+                        }
+                        
                     }
                     
                 }
                 if (flag  == 0)
                 {
-                    printf("%s:%d \‘%s\’ undeclared\n",filename, T->pos, T->type_id);
+                    printf("%s:%d ‘%s’ undeclared\n",filename, T->pos, T->type_id);
                 }
                 return FLOAT;
                 

@@ -246,10 +246,3 @@ void display_funparam(struct node *T)
 
 
 
-
-//语义分析函数
-void semantic_Analysis0(struct node *T)
-{
-
-
-}

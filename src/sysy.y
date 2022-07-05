@@ -6,6 +6,7 @@
 #include "string.h"
 #include "def.h"
 #include "semantic.h"
+#include "IR.h"
 extern int yylineno;
 extern char *yytext;
 extern FILE *yyin;
@@ -47,7 +48,7 @@ char filename[30];
 %nonassoc ELSE
 
 %%
-Program:      CompUnit {initTable(); semantic_Analysis($1);/*静态语义分析*/};
+Program:      CompUnit {initTable(); semantic_Analysis($1);displaycode(work($1));};
 CompUnit:     Decl {$$=$1;}
             | FuncDef {$$=$1;}
             | CompUnit Decl {$$=mknode(COMP_UNIT,$1,$2,NULL,yylineno);}

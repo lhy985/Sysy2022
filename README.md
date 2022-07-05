@@ -1,2 +1,10 @@
-
+flex词法描述文件sysy.l
+bison语法描述文件sysy.y
+抽象语法树构造文件ast.c
+相关头文件def.h
+Makefile文件
+生成符号表相关程序symtable.cpp
+生成符号表头文件symtable.h
+静态语义检查相关程序semantic.cpp
+静态语义检查头文件semantic.h
 参考链接：https://www.cnblogs.com/lit10050528/p/4389137.html
